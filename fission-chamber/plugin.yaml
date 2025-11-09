@@ -1,0 +1,24 @@
+Package:
+ name: fission-chamber
+ type: detector
+ groups: cea neutron
+ url: https://gitlab.in2p3.fr/lenain/fission-chamber.git
+ version: 0.1
+ author: Pierre Morfouace and Cyril Lenain
+ mail: cyril.lenain@cea.fr
+ description: FissionChamber is a neutron array detector of 72 liquid-scintillators with faster DAQ
+ dependencies: root
+
+Plugin: 
+  token: fission-chamber
+  library: NPFissionChamber
+ 
+Plugin: 
+  token: fission-chamber-geant4
+  library: NPFissionChamberGeant4
+ 
+PluginCitation:
+ type: Analysis
+ citation: something else
+ url: www.another-link.org
+
