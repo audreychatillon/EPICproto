@@ -87,10 +87,10 @@ namespace fission_chamber {
     void SetRawDataPointer(void*){};
 
    public:
-    unsigned int Label2ID(const std::string& label, bool& is_up);
+    unsigned int Label2FCdet(const std::string &label);
+    unsigned int Label2FCanode(const std::string &label);
+    unsigned int Label2ID(const std::string &label);
     unsigned int Label2FC(const std::string& label);
-    unsigned int Label2FissionChamber(const std::string& label, bool& is_LG);
-    unsigned int Label2SBT(const std::string& label, bool& is_left);
     double CalculateNeutronEnergy(double& flightTime, double& distance);
     // void CleanArray(double array[200]);
 

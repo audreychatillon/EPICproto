@@ -538,6 +538,52 @@ void FissionChamberDetector::BuildRawEvent(const std::string& daq, const std::st
 #endif
   };
 
+////////////////////////////////////////////////////////////////////////////////
+unsigned int FissionChamberDetector::Label2FCdet(const std::string &label) {
+  // generic to handle FC_det_anode or FC_anode
+  size_t pos1 = label.find("_");
+  size_t pos2 = label.find("_", pos1 + 1);
+  if (pos2 == string::npos) // format: FC_anode
+    return 0;
+  else { // format: FC_det_anode
+    string number = label.substr(pos1 + 1, pos2 - pos1 - 1);
+    return stoi(number);
+  }
+}
+////////////////////////////////////////////////////////////////////////////////
+unsigned int FissionChamberDetector::Label2FCanode(const std::string &label) {
+  // generic to handle FC_det_anode or FC_anode
+  size_t pos1 = label.find("_");
+  size_t pos2 = label.find("_", pos1 + 1);
+  if (pos2 == string::npos) { // format: FC_anode
+    string number = label.substr(pos1 + 1);
+    return stoi(number);
+  } else { // format: FC_det_anode
+    string number = label.substr(pos2 + 1);
+    return stoi(number);
+  }
+}
+////////////////////////////////////////////////////////////////////////////////
+unsigned int FissionChamberDetector::Label2ID(const std::string &label) {
+  // generic to handle FC_det_anode or FC_anode
+  int id;
+  string number;
+  size_t pos1 = label.find("_");
+  size_t pos2 = label.find("_", pos1 + 1);
+  if (pos2 == string::npos) { // FC_anode
+    number = label.substr(pos1 + 1);
+    id = stoi(number) - 1;
+  } else { // FC_det_anode
+    number = label.substr(pos1 + 1, pos2 - pos1 - 1);
+    int det = stoi(number);
+    number = label.substr(pos2 + 1);
+    int anode = stoi(number);
+    id = (det - 1) * 11 + anode - 1;
+  }
+  return id;
+}
+
+
   ////////////////////////////////////////////////////////////////////////////////
 
   unsigned int FissionChamberDetector::Label2FC(const std::string& label) {
