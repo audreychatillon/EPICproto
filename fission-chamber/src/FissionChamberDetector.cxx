@@ -276,7 +276,6 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
   static qdc_t_x2 fission_chamber_data_x2;
   static qdc_t_x3 fission_chamber_data_x3;
   static qdc_t_x4 fission_chamber_data_x4;
-  static double TimeHF;
 
   // Extract Data
   lbl = faster_data_label(data);
@@ -287,7 +286,7 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
   if (alias == QDC_TDC_X1_TYPE_ALIAS) {
     if (label == "HF") {
       faster_data_load(data, &hf_data);
-      TimeHF = (double)timestamp + (double)(qdc_conv_dt_ns(hf_data.tdc));
+      m_TimeHF = (double)timestamp + (double)(qdc_conv_dt_ns(hf_data.tdc));
     }
     if (label == "PULSER" || label == "FAKE_FISSION") {
       faster_data_load(data, &fc_data);
@@ -302,8 +301,7 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
       m_RawData->SetFCfirstQ2(0);
       m_RawData->SetFCQmax(0);
       m_RawData->SetFakeFissionStatus(true);
-      // std::cout << "FF HF " << TimeHF << std::endl;
-      m_RawData->SetTimeHF(TimeHF);
+      m_RawData->SetTimeHF(m_TimeHF);
       m_RawData->SetFCCfd(-1);
       m_RawData->SetFCCfd_bis(-1);
       m_RawData->SetFCQ1_bis(fc_data.q1);
@@ -322,7 +320,7 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
       m_RawData->SetFCfirstQ2(0);
       m_RawData->SetFCQmax(0);
       m_RawData->SetFakeFissionStatus(true);
-      m_RawData->SetTimeHF(TimeHF);
+      m_RawData->SetTimeHF(m_TimeHF);
       m_RawData->SetFCCfd(-1);
       m_RawData->SetFCCfd_bis(-1);
       m_RawData->SetFCQ1_bis(fc_data.q1);
@@ -505,25 +503,17 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
                 cout << "stop " << endT3 << endl;
         }*/
 
-        double TimeFC =
-            (double)timestamp + (double)T_cfd - sampler_before_threshold_ns;
-        //        if(Qlong>12000){
+        double TimeFC = (double)timestamp + (double)T_cfd - sampler_before_threshold_ns;
         m_RawData->SetDetNbr(DetNb);
-        // std::cout << "Anode nbr " << Label2FC(label) << std::endl;
         m_RawData->SetAnodeNbr(AnodeNb);
-        // std::cout << "Qlong " << Qlong << std::endl;
         m_RawData->SetFCQ1(Qlong);
-        // std::cout << "Q2 " << Q2 << std::endl;
         m_RawData->SetFCQ2(Q2);
         m_RawData->SetFCQ3(Q3);
-        // std::cout << "Qmax " << Qmax << std::endl;
         m_RawData->SetFCfirstQ2(firstQ2);
         m_RawData->SetFCQmax(Qmax);
-        // std::cout << "TimeFC " << TimeFC << std::endl;
         m_RawData->SetFCTime(TimeFC);
         m_RawData->SetFakeFissionStatus(false);
-        // std::cout << "TimeHF " << TimeHF << std::endl;
-        m_RawData->SetTimeHF(TimeHF);
+        m_RawData->SetTimeHF(m_TimeHF);
         m_RawData->SetFCCfd(T_cfd);
         m_RawData->SetFCCfd_bis(T_cfd_bis);
         m_RawData->SetFCQ1_bis(Qlong_bis);

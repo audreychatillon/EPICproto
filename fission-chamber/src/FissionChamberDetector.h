@@ -121,6 +121,9 @@ private:
   void AddFissionChamber(double R, double Theta, double Phi);
   void AddFissionChamber(vector<double> Pos, string Type);
 
+  // last TimeHF
+  double m_TimeHF;
+
   // CFD and calculs parameters
   double Samp_size_ns;
   double VEND_cfd_frac;
