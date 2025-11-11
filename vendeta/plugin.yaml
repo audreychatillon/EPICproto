@@ -1,0 +1,24 @@
+Package:
+ name: vendeta
+ type: detector
+ groups: cea neutron
+ url: https://gitlab.in2p3.fr/lenain/vendeta-plugin.git
+ version: 0.1
+ author: Pierre Morfouace and Cyril Lenain
+ mail: cyril.lenain@cea.fr
+ description: Vendeta is a neutron array detector of 72 liquid-scintillators with faster DAQ
+ dependencies: root
+
+Plugin: 
+  token: vendeta
+  library: NPVendeta
+ 
+Plugin: 
+  token: vendeta-geant4
+  library: NPVendetaGeant4
+ 
+PluginCitation:
+ type: Analysis
+ citation: something else
+ url: www.another-link.org
+
