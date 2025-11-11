@@ -65,6 +65,8 @@ FissionChamberDetector::FissionChamberDetector() {
 
   m_Build_Sampler_Online = 0;
   m_Anode_Sampler_Online = 6;
+
+  m_TimeHF = 0;
 }
 ////////////////////////////////////////////////////////////////////////////////
 void FissionChamberDetector::ReadConfiguration(nptool::InputParser parser) {
@@ -96,27 +98,15 @@ void FissionChamberDetector::ReadConversionConfig() {
     for (auto block : blocks) {
       m_Build_Sampler_Online = block->GetInt("sampler_online");
       m_Anode_Sampler_Online = block->GetInt("sampler_anode");
-      int anode = block->GetInt("anode", 1);
-
-      FC_cfd_frac_perA[anode - 1] = 1. / block->GetInt("cfd_frac", 1);
-      FC_cfd_delay_perA[anode - 1] = block->GetInt("cfd_delay", 1);
-      Start_short_gate_FC_perA[anode - 1] = block->GetInt("Q2_gate1", 1);
-      End_short_gate_FC_perA[anode - 1] = block->GetInt("Q2_gate2", 1);
-      Start_Q3_gate_FC_perA[anode - 1] = block->GetInt("Q3_gate1", 1);
-      End_Q3_gate_FC_perA[anode - 1] = block->GetInt("Q3_gate2", 1);
-      Start_long_gate_FC_perA[anode - 1] = block->GetInt("long_gate1", 1);
-      End_long_gate_FC_perA[anode - 1] = block->GetInt("long_gate2", 1);
-
-      FC_cfd_frac_perA_bis[anode - 1] = 1. / block->GetInt("cfd_frac_bis", 1);
-      FC_cfd_delay_perA_bis[anode - 1] = block->GetInt("cfd_delay_bis", 1);
-      Start_short_gate_FC_perA_bis[anode - 1] =
-          block->GetInt("Q2_gate1_bis", 1);
-      End_short_gate_FC_perA_bis[anode - 1] = block->GetInt("Q2_gate2_bis", 1);
-      Start_Q3_gate_FC_perA_bis[anode - 1] = block->GetInt("Q3_gate1_bis", 1);
-      End_Q3_gate_FC_perA_bis[anode - 1] = block->GetInt("Q3_gate2_bis", 1);
-      Start_long_gate_FC_perA_bis[anode - 1] =
-          block->GetInt("long_gate1_bis", 1);
-      End_long_gate_FC_perA_bis[anode - 1] = block->GetInt("long_gate2_bis", 1);
+      int anode = block->GetInt("anode");
+      FC_cfd_frac_perA[anode - 1] = 1. / block->GetInt("cfd_frac");
+      FC_cfd_delay_perA[anode - 1] = block->GetInt("cfd_delay");
+      Start_short_gate_FC_perA[anode - 1] = block->GetInt("Q2_gate1");
+      End_short_gate_FC_perA[anode - 1] = block->GetInt("Q2_gate2");
+      Start_Q3_gate_FC_perA[anode - 1] = block->GetInt("Q3_gate1");
+      End_Q3_gate_FC_perA[anode - 1] = block->GetInt("Q3_gate2");
+      Start_long_gate_FC_perA[anode - 1] = block->GetInt("long_gate1");
+      End_long_gate_FC_perA[anode - 1] = block->GetInt("long_gate2");
     }
   } else {
     std::cout
@@ -137,34 +127,16 @@ void FissionChamberDetector::AddFissionChamber(double R, double Theta,
 void FissionChamberDetector::AddFissionChamber(vector<double> pos,
                                                string Type) {
   if (Type == "Pu") {
-    double Zpos = -29.6; // position of anode 1 (i=0)
     for (int i = 0; i < 11; i++) {
-      // cout << "anode " << i+1 << " : " << Zpos << endl;
       TVector3 AnodePos(
           pos[0], pos[1],
-          pos[2] +
-              Zpos); // for Pu anodes separated by 5.8mm and 6 mm and anode 6 in
-                     // center, deposit is not on anode but anode is middle
-                     // point betwen the two cathodes containing the deposits
-      if (i % 2 == 0) {
-        Zpos += 6.0; // Add 6 for even iterations
-      } else {
-        Zpos += 5.8; // Add 5.8 for odd iterations
-      }
+          pos[2] - 27.5 +
+              i * 5.5); // for Pu anodes separated by 5.5mm and anode 6 in
+                        // center, deposit is not on anode but anode is middle
+                        // point betwen the two cathodes containing the deposits
       m_AnodePosition.push_back(AnodePos);
     }
   }
-
-  // Old version with 5.5mm interanode distance
-  // if (Type == "Pu"){
-  //       for(int i = 0; i<11; i++){
-  //         TVector3 AnodePos(pos[0], pos[1], pos[2] -27.5 + i*5.5); //for Pu
-  //         anodes separated by 5.5mm and anode 6 in center, deposit is not on
-  //         anode but anode is middle point betwen the two cathodes containing
-  //         the deposits m_AnodePosition.push_back(AnodePos);
-  //       }
-  // }
-
   if (Type == "Cf") {
     for (int i = 0; i < 11; i++) {
       TVector3 AnodePos(
@@ -251,9 +223,7 @@ void FissionChamberDetector::BuildPhysicalEvent() {
                         m_RawData->GetFCQ2(i), m_RawData->GetFCQ3(i),
                         m_RawData->GetFCfirstQ2(i), Time_FC,
                         m_RawData->GetFCQmax(i), incomingE, incomingToF,
-                        Time_HF, isFakeFission, m_RawData->GetFCCfd(i),
-                        m_RawData->GetFCCfd_bis(i), m_RawData->GetFCQ1_bis(i),
-                        m_RawData->GetFCQ2_bis(i), m_RawData->GetFCQ3_bis(i));
+                        Time_HF, isFakeFission, m_RawData->GetFCCfd(i));
   }
 }
 
@@ -267,7 +237,7 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
 
   // Static variable
   static unsigned short lbl;
-  static unsigned int index;
+  static unsigned int ID;
   static long double timestamp;
   static unsigned char alias;
   static qdc_t_x4 hf_data;
@@ -277,6 +247,14 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
   static qdc_t_x3 fission_chamber_data_x3;
   static qdc_t_x4 fission_chamber_data_x4;
   static double TimeHF;
+
+  // TODO clean
+  // FC_2 : gamma peak @ 1032.40 => FC @ 10 m FC_offest doit tomber à 10/0.3 = 33 ns
+  // FC_6 : gamma peak @ 1029.14 => FC @ 10 m FC_offest doit tomber à 10/0.3 = 33 ns
+  // FC_9 : gamma peak @ 1038.52 => FC @ 10 m FC_offest doit tomber à 10/0.3 = 33 ns
+
+  static double FCoffset[11] = {0., -999.40, 0., 0., 0., -996.14, 0., 0., -1005.52, 0.,0.};
+  
 
   // Extract Data
   lbl = faster_data_label(data);
@@ -288,6 +266,7 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
     if (label == "HF") {
       faster_data_load(data, &hf_data);
       TimeHF = (double)timestamp + (double)(qdc_conv_dt_ns(hf_data.tdc));
+      m_TimeHF = TimeHF ;
     }
     if (label == "PULSER" || label == "FAKE_FISSION") {
       faster_data_load(data, &fc_data);
@@ -303,12 +282,8 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
       m_RawData->SetFCQmax(0);
       m_RawData->SetFakeFissionStatus(true);
       // std::cout << "FF HF " << TimeHF << std::endl;
-      m_RawData->SetTimeHF(TimeHF);
+      m_RawData->SetTimeHF(m_TimeHF);
       m_RawData->SetFCCfd(-1);
-      m_RawData->SetFCCfd_bis(-1);
-      m_RawData->SetFCQ1_bis(fc_data.q1);
-      m_RawData->SetFCQ2_bis(0);
-      m_RawData->SetFCQ3_bis(0);
     }
   } else if (alias == QDC_TDC_X2_TYPE_ALIAS) {
     if (label == "PULSER" || label == "FAKE_FISSION") {
@@ -322,12 +297,8 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
       m_RawData->SetFCfirstQ2(0);
       m_RawData->SetFCQmax(0);
       m_RawData->SetFakeFissionStatus(true);
-      m_RawData->SetTimeHF(TimeHF);
+      m_RawData->SetTimeHF(m_TimeHF);
       m_RawData->SetFCCfd(-1);
-      m_RawData->SetFCCfd_bis(-1);
-      m_RawData->SetFCQ1_bis(fc_data.q1);
-      m_RawData->SetFCQ2_bis(fc_data.q2);
-      m_RawData->SetFCQ3_bis(0);
     }
   } else if (alias == QDC_TDC_X4_TYPE_ALIAS) {
     /* else{ */
@@ -348,12 +319,11 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
       int sampler_before_threshold = sampler_before_th(data);
       int sampler_before_threshold_ns = sampler_before_th_ns(data);
 
-      int DetNb = Label2FCdet(label);
-      int AnodeNb = Label2FCanode(label);
-      index = (DetNb - 1) * 11 + AnodeNb - 1;
+      ID = Label2FC(label);
       double BLRoffset = 0;
 
       bool ApplyFilter = false;
+      int AnodeNb = Label2FC(label);
       // if(AnodeNb==11 || AnodeNb==6 || AnodeNb==9 || AnodeNb == 10){
       if (AnodeNb > 0) {
         ApplyFilter = false;
@@ -372,16 +342,16 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
       double QmaxCFD, Qmax = -10000;
       int iQmax, imax;
       double T_cfd, Q2, Q3, Qlong, firstQ2;
-      double T_cfd_bis, Q2_bis, Q3_bis, Qlong_bis;
+      
 
+      // TODO clean
+      double IncomingRawTof;
+      double IncomingEnergy; 
+      nptool::Particle *neutron = new nptool::Particle("1n");
+      
       static bool FC_Triggered = false, FC_Threshold = false;
-      T_cfd_bis = signalProcessor.calculateCFD(
-          FC_cfd_frac_perA_bis[index], FC_cfd_delay_perA_bis[index], 2, Qmax,
-          iQmax, imax, Q_CFD_min, FC_Triggered, FC_Threshold);
-
-      FC_Triggered = false, FC_Threshold = false;
       T_cfd = signalProcessor.calculateCFD(
-          FC_cfd_frac_perA[index], FC_cfd_delay_perA[index], 2, Qmax, iQmax,
+          FC_cfd_frac_perA[ID - 1], FC_cfd_delay_perA[ID - 1], 2, Qmax, iQmax,
           imax, Q_CFD_min, FC_Triggered, FC_Threshold);
 
       /* if(ID ==1){
@@ -394,20 +364,16 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
       if (FC_Triggered && FC_Threshold) {
         m_good_raw_event++;
 
-        /*if(m_good_raw_event%10000==0)
-          cout << m_total_raw_event << " " << m_good_raw_event << " / " <<
-          (double)m_good_raw_event/(double)m_total_raw_event*100 << "%" << endl;
-          */
+        // if(m_good_raw_event%10000==0)
+        //   cout << m_total_raw_event << " " << m_good_raw_event << " / " <<
+        //   (double)m_good_raw_event/(double)m_total_raw_event*100 << "%" <<
+        //   endl;
 
         // cout << "signal size "<< Signal.size() << endl;
         double signal_size = Signal.size();
 
-        /////
-        /// gate integration for first cfd
-        /////
-
-        double startT = T_cfd - Start_short_gate_FC_perA[index];
-        double endT = T_cfd + End_short_gate_FC_perA[index];
+        double startT = T_cfd - Start_short_gate_FC_perA[ID - 1];
+        double endT = T_cfd + End_short_gate_FC_perA[ID - 1];
         startT = max(0., startT); // to make sure gate starts in signal
         endT =
             min(endT, signal_size * 2); // to make sure that gate ends in signal
@@ -416,8 +382,8 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
 
         firstQ2 = signalProcessor.GetAmpStartGate(2, startT);
 
-        double startT3 = T_cfd + Start_Q3_gate_FC_perA[index];
-        double endT3 = T_cfd + End_Q3_gate_FC_perA[index];
+        double startT3 = T_cfd + Start_Q3_gate_FC_perA[ID - 1];
+        double endT3 = T_cfd + End_Q3_gate_FC_perA[ID - 1];
         startT3 =
             min(signal_size * 2, startT3); // to make sure gate starts in signal
         endT3 = min(endT3,
@@ -425,53 +391,12 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
         Q3 = signalProcessor.integrateSignal(2, startT3, endT3);
         // std::cout << "Q3 " << Q3 << std::endl;
 
-        double startT2 = T_cfd - Start_long_gate_FC_perA[index];
-        double endT2 = T_cfd + End_long_gate_FC_perA[index];
+        double startT2 = T_cfd - Start_long_gate_FC_perA[ID - 1];
+        double endT2 = T_cfd + End_long_gate_FC_perA[ID - 1];
         startT2 = max(0., startT2); // to make sure gate starts in signal
         endT2 = min(endT2,
                     signal_size * 2); // to make sure that gate ends in signal
         Qlong = signalProcessor.integrateSignal(2, startT2, endT2);
-
-        /////
-        /// gate integration for second cfd
-        /////
-
-        // cout << "T_cfd_bis " << T_cfd_bis << endl;
-        if (T_cfd_bis != -10000) {
-          double startT_bis = T_cfd_bis - Start_short_gate_FC_perA_bis[index];
-          double endT_bis = T_cfd_bis + End_short_gate_FC_perA_bis[index];
-          startT_bis = max(0., startT_bis); // to make sure gate starts in
-                                            // signal
-          endT_bis =
-              min(endT_bis,
-                  signal_size * 2); // to make sure that gate ends in signal
-          Q2_bis = signalProcessor.integrateSignal(2, startT_bis, endT_bis);
-          // std::cout << "Q2_bis " << Q2_bis << std::endl;
-
-          double startT3_bis = T_cfd_bis + Start_Q3_gate_FC_perA_bis[index];
-          double endT3_bis = T_cfd_bis + End_Q3_gate_FC_perA_bis[index];
-          startT3_bis = min(signal_size * 2,
-                            startT3_bis); // to make sure gate starts in signal
-          endT3_bis =
-              min(endT3_bis,
-                  signal_size * 2); // to make sure that gate ends in signal
-          Q3_bis = signalProcessor.integrateSignal(2, startT3_bis, endT3_bis);
-          // std::cout << "Q3 " << Q3 << std::endl;
-
-          double startT2_bis = T_cfd_bis - Start_long_gate_FC_perA_bis[index];
-          double endT2_bis = T_cfd_bis + End_long_gate_FC_perA_bis[index];
-          startT2_bis =
-              max(0., startT2_bis); // to make sure gate starts in signal
-          endT2_bis =
-              min(endT2_bis,
-                  signal_size * 2); // to make sure that gate ends in signal
-          Qlong_bis =
-              signalProcessor.integrateSignal(2, startT2_bis, endT2_bis);
-        } else {
-          Q2_bis = 1;
-          Q3_bis = 1;
-          Qlong_bis = 0;
-        }
 
         double Qtot, FC_cfd;
         // bool FakeFission = label==Label_PULSER;
@@ -507,10 +432,19 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
 
         double TimeFC =
             (double)timestamp + (double)T_cfd - sampler_before_threshold_ns;
+	if (TimeFC>0 && m_TimeHF>0){
+	   IncomingRawTof = TimeFC - m_TimeHF - FCoffset[ID-1];
+           if (IncomingRawTof<0) IncomingRawTof+=1799.;
+           m_RawData->SetFCRawTof(IncomingRawTof);
+           neutron->SetBeta((10000 / IncomingRawTof) / nptool::c_light);
+           IncomingEnergy = neutron->GetEnergy();
+           cout << "TimeFC = " << TimeFC << ", TimeHF = " << m_TimeHF << ", FCoffset["<<ID-1<<"] = " << FCoffset[ID-1] << ", Incoming Tof = " << IncomingRawTof ;
+           cout << ",  IncomingEnergy = " << IncomingEnergy << endl;
+           m_RawData->SetFCIncomingE(IncomingEnergy);
+	}
         //        if(Qlong>12000){
-        m_RawData->SetDetNbr(DetNb);
         // std::cout << "Anode nbr " << Label2FC(label) << std::endl;
-        m_RawData->SetAnodeNbr(AnodeNb);
+        m_RawData->SetAnodeNbr(ID);
         // std::cout << "Qlong " << Qlong << std::endl;
         m_RawData->SetFCQ1(Qlong);
         // std::cout << "Q2 " << Q2 << std::endl;
@@ -523,14 +457,10 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
         m_RawData->SetFCTime(TimeFC);
         m_RawData->SetFakeFissionStatus(false);
         // std::cout << "TimeHF " << TimeHF << std::endl;
-        m_RawData->SetTimeHF(TimeHF);
+        m_RawData->SetTimeHF(m_TimeHF);
         m_RawData->SetFCCfd(T_cfd);
-        m_RawData->SetFCCfd_bis(T_cfd_bis);
-        m_RawData->SetFCQ1_bis(Qlong_bis);
-        m_RawData->SetFCQ2_bis(Q2_bis);
-        m_RawData->SetFCQ3_bis(Q3_bis);
 
-        if (m_Build_Sampler_Online == 1 && AnodeNb == m_Anode_Sampler_Online) {
+        if (m_Build_Sampler_Online == 1 && ID == m_Anode_Sampler_Online) {
           m_RawData->SetSample(sampler_before_threshold);
           m_RawData->SetSample(T_cfd);
           for (int i = 0; i < nbr_of_samples; i++) {
@@ -589,51 +519,6 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
   // std::cout << "End Build Raw FC" << std::endl;
 #endif
 };
-
-////////////////////////////////////////////////////////////////////////////////
-unsigned int FissionChamberDetector::Label2FCdet(const std::string &label) {
-  // generic to handle FC_det_anode or FC_anode
-  size_t pos1 = label.find("_");
-  size_t pos2 = label.find("_", pos1 + 1);
-  if (pos2 == string::npos) // format: FC_anode => only one FC
-    return 1;
-  else { // format: FC_det_anode
-    string number = label.substr(pos1 + 1, pos2 - pos1 - 1);
-    return stoi(number);
-  }
-}
-////////////////////////////////////////////////////////////////////////////////
-unsigned int FissionChamberDetector::Label2FCanode(const std::string &label) {
-  // generic to handle FC_det_anode or FC_anode
-  size_t pos1 = label.find("_");
-  size_t pos2 = label.find("_", pos1 + 1);
-  if (pos2 == string::npos) { // format: FC_anode
-    string number = label.substr(pos1 + 1);
-    return stoi(number);
-  } else { // format: FC_det_anode
-    string number = label.substr(pos2 + 1);
-    return stoi(number);
-  }
-}
-////////////////////////////////////////////////////////////////////////////////
-unsigned int FissionChamberDetector::Label2ID(const std::string &label) {
-  // generic to handle FC_det_anode or FC_anode
-  int id;
-  string number;
-  size_t pos1 = label.find("_");
-  size_t pos2 = label.find("_", pos1 + 1);
-  if (pos2 == string::npos) { // FC_anode
-    number = label.substr(pos1 + 1);
-    id = stoi(number) - 1;
-  } else { // FC_det_anode
-    number = label.substr(pos1 + 1, pos2 - pos1 - 1);
-    int det = stoi(number);
-    number = label.substr(pos2 + 1);
-    int anode = stoi(number);
-    id = (det - 1) * 11 + anode - 1;
-  }
-  return id;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

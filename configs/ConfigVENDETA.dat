@@ -1,0 +1,13 @@
+ConfigVENDETA:
+  cfd_frac: 0.33
+  cfd_delay: 4
+  start_gate_LG: 6
+  start_gate_HG: 6
+  end_short_gate_LG: 20
+  end_short_gate_HG: 20
+  end_long_gate_LG: 120
+  end_long_gate_HG: 150
+  sampler_online: 0
+  sampler_LG_channel: 37
+  sampler_HG_channel: 37
+

@@ -87,10 +87,10 @@ public: // inherrited from nptool::VDetector
   void SetRawDataPointer(void *) {};
 
 public:
-  unsigned int Label2FCdet(const std::string &label);
-  unsigned int Label2FCanode(const std::string &label);
-  unsigned int Label2ID(const std::string &label);
+  unsigned int Label2ID(const std::string &label, bool &is_up);
   unsigned int Label2FC(const std::string &label);
+  unsigned int Label2FissionChamber(const std::string &label, bool &is_LG);
+  unsigned int Label2SBT(const std::string &label, bool &is_left);
   double CalculateNeutronEnergy(double &flightTime, double &distance);
   // void CleanArray(double array[200]);
 
@@ -113,6 +113,9 @@ private:
   // Calib Q
   double fCalQUp(const int &i);
   double fCalQDown(const int &i);
+
+  // Last TimeHF
+  double m_TimeHF;
 
   // array settings
   unsigned int m_NumberOfFissionChamber;
@@ -152,17 +155,6 @@ private:
                                      20., 3., 20., 20., 20.};
   double End_long_gate_FC_perA[11]{25,  25., 75., 25., 75., 25.,
                                    75., 25., 75., 75., 75.};
-
-  double FC_cfd_frac_perA_bis[11];
-  double FC_cfd_delay_perA_bis[11]; // ns
-  double Start_short_gate_FC_perA_bis[11];
-  double End_short_gate_FC_perA_bis[11];
-
-  double Start_Q3_gate_FC_perA_bis[11];
-  double End_Q3_gate_FC_perA_bis[11];
-
-  double Start_long_gate_FC_perA_bis[11];
-  double End_long_gate_FC_perA_bis[11];
 
   int m_Build_Sampler_Online;
   int m_Anode_Sampler_Online;

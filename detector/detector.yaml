@@ -1,3 +1,8 @@
 fission-chamber:
  POS: 0 0 0
  TYPE: Pu
+vendeta:
+  PHI: -10.0 deg
+  R: 89 mm
+  THETA: 90.0 deg
+ 
