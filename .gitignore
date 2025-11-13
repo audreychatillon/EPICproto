@@ -3,6 +3,7 @@ install/
 output/
 faster/
 
+
 # Prerequisites
 *.d
 
@@ -26,6 +27,7 @@ faster/
 *.so
 *.dylib
 *.dll
+*.pcm
 
 # Fortran module files
 *.mod

@@ -225,11 +225,11 @@ void FissionChamberDetector::BuildPhysicalEvent() {
     short AnodeNumber = m_RawData->GetFCAnodeNbr(i);
     bool isFakeFission = false;
     isFakeFission = m_RawData->GetFCisFakeFission(i);
-    double Time_FC = m_RawData->GetFCTime(i);
+    double Time_FC = m_RawData->GetTimeFC(i);
     double cfd = m_RawData->GetFCCfd(i);
     double FC_offset = m_Cal.GetValue(
         "FissionChamber_ANODE" + nptool::itoa(AnodeNumber) + "_TIMEOFFSET", 0);
-    double Time_HF = m_RawData->GetHFTime(i);
+    double Time_HF = m_RawData->GetTimeHF(i);
     double incomingToF = Time_FC - Time_HF - FC_offset;
 
     // Get Anode position, in pulser mode (fakefission) we use the anode 6 by
@@ -270,7 +270,7 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
   static unsigned int index;
   static long double timestamp;
   static unsigned char alias;
-  static qdc_t_x4 hf_data;
+  static qdc_t_x1 hf_data;
   static qdc_t_x2 fc_data;
   static faster_data_p group_data;
   static qdc_t_x2 fission_chamber_data_x2;
@@ -287,14 +287,13 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
     if (label == "HF") {
       faster_data_load(data, &hf_data);
       m_TimeHF = (double)timestamp + (double)(qdc_conv_dt_ns(hf_data.tdc));
+      m_RawData->SetTimeHF(m_TimeHF);
     }
     if (label == "PULSER" || label == "FAKE_FISSION") {
       faster_data_load(data, &fc_data);
       double Time = timestamp + (double)(qdc_conv_dt_ns(fc_data.tdc));
       m_RawData->SetAnodeNbr(-1);
-      // std::cout << "FFtime " << Time << std::endl;
-      m_RawData->SetFCTime(Time);
-      // std::cout << "FFQ1 " << fc_data.q1 << std::endl;
+      m_RawData->SetTimeFC(Time);
       m_RawData->SetFCQ1(fc_data.q1);
       m_RawData->SetFCQ2(0);
       m_RawData->SetFCQ3(0);
@@ -313,7 +312,7 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
       faster_data_load(data, &fc_data);
       double Time = timestamp + (double)(qdc_conv_dt_ns(fc_data.tdc));
       m_RawData->SetAnodeNbr(-1);
-      m_RawData->SetFCTime(Time);
+      m_RawData->SetTimeFC(Time);
       m_RawData->SetFCQ1(fc_data.q1);
       m_RawData->SetFCQ2(fc_data.q2);
       m_RawData->SetFCQ3(0);
@@ -506,14 +505,14 @@ void FissionChamberDetector::BuildRawEvent(const std::string &daq,
         double TimeFC = (double)timestamp + (double)T_cfd - sampler_before_threshold_ns;
         m_RawData->SetDetNbr(DetNb);
         m_RawData->SetAnodeNbr(AnodeNb);
+        m_RawData->SetTimeFC(TimeFC);
+        m_RawData->SetTimeHF(m_TimeHF);
         m_RawData->SetFCQ1(Qlong);
         m_RawData->SetFCQ2(Q2);
         m_RawData->SetFCQ3(Q3);
         m_RawData->SetFCfirstQ2(firstQ2);
         m_RawData->SetFCQmax(Qmax);
-        m_RawData->SetFCTime(TimeFC);
         m_RawData->SetFakeFissionStatus(false);
-        m_RawData->SetTimeHF(m_TimeHF);
         m_RawData->SetFCCfd(T_cfd);
         m_RawData->SetFCCfd_bis(T_cfd_bis);
         m_RawData->SetFCQ1_bis(Qlong_bis);
