@@ -72,7 +72,7 @@ void run(int RunNumber)
   TH1F * h1_inTofRaw_Q1max[11];
   TH2F * h2_inTofRaw_Q1max = new TH2F("inRawToF_vs_A_Q1max","inRawToF_vs_A_Q1max",13,-0.5,12.5,2000,-100,1900);
   TH1F * h1_inEne_Q1max[11];
-  TH2F * h2_inEne_Q1max = new TH2F("inEne_vs_A_Q1max","inEne_vs_A_Q1max",13,-0.5,12.5,500,0,50);
+  TH2F * h2_inEne_Q1max = new TH2F("inEne_vs_A_Q1max","inEne_vs_A_Q1max",13,-0.5,12.5,1000,0,100);
   TH2F * h2_inEne_vs_Q1_Q1max[11];
   h2_inTofRaw->SetDirectory(0);
   h2_inTofRaw_Q1max->SetDirectory(0);
@@ -80,8 +80,8 @@ void run(int RunNumber)
   for(short a=0; a<11; a++){
     h1_inTofRaw[a] = new TH1F(Form("inTofRaw_A%02d",a+1),Form("incoming raw Tof [ns] at Anode %d",a+1),2000,-100,1900);
     h1_inTofRaw_Q1max[a] = new TH1F(Form("inTofRaw_A%02d_Q1max",a+1),Form("incoming raw Tof [ns] at Anode %d defined with Q1max",a+1),2000,-100,1900);
-    h1_inEne_Q1max[a] = new TH1F(Form("inEne_A%02d",a+1),Form("incoming neutron energy [MeV] at Anode %d",a+1),500,0,50);
-    h2_inEne_vs_Q1_Q1max[a] = new TH2F(Form("inEne_A%02d_vs_Q1_Q1max",a+1),Form("incoming energy [MeV] vs Q1 at Anode %d defined with Q1max",a+1),1000,0,200000,50,0,50);
+    h1_inEne_Q1max[a] = new TH1F(Form("inEne_A%02d",a+1),Form("incoming neutron energy [MeV] at Anode %d",a+1),1000,0,100);
+    h2_inEne_vs_Q1_Q1max[a] = new TH2F(Form("inEne_A%02d_vs_Q1_Q1max",a+1),Form("incoming energy [MeV] vs Q1 at Anode %d defined with Q1max",a+1),2500,0,250000,400,0,100);
     h1_inTofRaw[a]->SetDirectory(0);
     h1_inTofRaw_Q1max[a]->SetDirectory(0);
     h1_inEne_Q1max[a]->SetDirectory(0);
@@ -115,7 +115,7 @@ void run(int RunNumber)
   vector<double>  Q3;                   Q3.reserve(11);
   short           IndexQ1max;  
 
-  TFile * fout = new TFile(Form("RawEpicData_run%i.root",RunNumber),"recreate"); 
+  TFile * fout = new TFile(Form("../output/conversion/RawEpicData_run%i.root",RunNumber),"recreate"); 
   TTree * tout = new TTree("RawEpicProto",Form("Raw data for EPIC proto run%i",RunNumber));
   tout->Branch("AnodeNbr",&AnodeNbr);
   tout->Branch("Time",&Time);
